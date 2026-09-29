@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="icon.png">
-<title>Утечка информации по электрическому каналу</title>
+<title>Открытый урок: утечка информации по электрическому каналу</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:#eef1ee;--pn:#fff;--tx:#1d2a26;--mu:#5d6b66;--ln:#cfd7d2;--ac:#0b6b5c;--er:#b3261e}
@@ -32,6 +31,10 @@ canvas{width:100%;display:block}
 table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--ln);padding:4px;text-align:center}
 td input{width:100%;min-width:74px;text-align:right}
 .tbl{overflow-x:auto}.ok{background:rgba(60,180,90,.25)}.no{background:rgba(220,60,50,.25)}
+.knob{width:84px;height:84px;border-radius:50%;border:3px solid var(--ln);background:radial-gradient(circle at 35% 30%,var(--pn),var(--bg));position:relative;cursor:grab;touch-action:none;flex:none;transition:transform .08s}
+.knob i{position:absolute;left:50%;top:5px;width:5px;height:20px;margin-left:-2.5px;border-radius:3px;background:var(--ac)}
+.knob:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.dev{display:flex;gap:12px;flex-wrap:wrap}.dev>div{flex:1 1 200px;border:1px solid var(--ln);border-radius:6px;padding:8px}
 small{color:var(--mu)}ol{padding-left:20px;margin:4px 0}.q{margin:10px 0 4px;font-weight:600}
 .big{background:var(--bg);border-left:4px solid var(--ac);padding:8px 10px;border-radius:4px}
 </style></head><body>
@@ -51,17 +54,25 @@ small{color:var(--mu)}ol{padding-left:20px;margin:4px 0}.q{margin:10px 0 4px;fon
 <select id="cb"><option value="k2">КСПВГ</option><option value="u5">UTP</option><option value="s5">STP (экранированный)</option></select></label></div>
 <p style="margin:6px 0 0"><small>Кабель №1 подключён к генератору. Пробник стоит на другом кабеле, проложенном параллельно.</small></p></section>
 
-<section><h2>Анализатор спектра</h2>
+<section><h2>Анализатор спектра</h2><div class="row" style="margin-bottom:8px"><button class="btn" id="pwr">Питание: выкл</button></div>
 <div class="scr"><canvas id="sp" height="280"></canvas></div>
 <div class="ro" id="ro"></div>
 <div class="row">
-<label>Центральная частота, кГц<input type="number" id="cf" value="100" min="10" step="50"></label>
-<label>SPAN, кГц<input type="number" id="sw" value="1000" min="10" step="50"></label>
-<button class="btn on" id="pk">Пик (Peak)</button></div>
-<p style="margin:6px 0 0"><small>Маркер стоит на самом высоком пике. В таблицу записывают Level.</small></p></section>
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;width:100%">
+<div id="knob" class="knob" tabindex="0" role="slider" aria-label="Ручка настройки анализатора"><i></i></div>
+<div><div class="row"><button class="btn on" data-p="cf">FREQ</button><button class="btn" data-p="sw">SPAN</button></div>
+<div class="row" style="margin-top:6px"><small>Шаг:</small><button class="btn" data-s="10">10 кГц</button><button class="btn on" data-s="100">100 кГц</button><button class="btn" data-s="1000">1 МГц</button></div></div>
+<div class="ro" style="flex-direction:column;gap:2px"><span id="vcf"></span><span id="vsw"></span></div>
+<button class="btn on" id="pk">Пик (Peak)</button></div></div>
+<p style="margin:6px 0 0"><small>Выберите FREQ или SPAN и крутите ручку: перетащите её по кругу или крутите колесом мыши над ручкой. Маркер стоит на самом высоком пике. В таблицу записывают Level, шум читают в строке Noise.</small></p></section>
+
+<section><h2>Соната-Р3.1 (средство защиты)</h2><div class="dev">
+<div><b>Соната-Р3.1</b><br><small>Шум в эфир и в линии</small><br><button class="btn" id="p31">Выкл</button>
+<label>Мощность излучения: <span id="p31v">5</span><input type="range" id="p31l" min="0" max="10" value="5"></label></div>
+</div></section>
 
 <section><h2>Порядок измерения</h2><ol>
-<li>Установите частоту на генераторе.</li><li>Такую же центральную частоту введите на анализаторе.</li>
+<li>Включите анализатор спектра кнопкой «Питание».</li><li>Установите частоту на генераторе.</li><li>Такую же центральную частоту установите на анализаторе ручкой (FREQ).</li>
 <li>Подайте сигнал на первый кабель.</li><li>Пробник стоит на втором кабеле.</li>
 <li>Найдите пик и определите его уровень.</li><li>Запишите значение в таблицу.</li></ol></section>
 </div>
@@ -82,6 +93,12 @@ small{color:var(--mu)}ol{padding-left:20px;margin:4px 0}.q{margin:10px 0 4px;fon
 <p><small>Пример записи: Frequency 100 кГц, Level −48,3 dBm → в таблицу вносится −48,3.</small></p></section>
 
 <section><h2>Сравнение результатов</h2><div id="qs"></div></section>
+<section><h2>Защита кабелей: Соната-Р3.1</h2>
+<p style="margin:0 0 6px">Частота 2 МГц, 5 В. Пробник на каждом кабеле. Снимите уровень шума (Noise) при выключенной Сонате, при мощности 5 и при мощности 10. При мощности 10 запишите также уровень сигнала (Level). Единица измерения: дБм.</p>
+<div class="tbl"><table id="t2"></table></div>
+<div id="qs2"></div>
+<div class="row" style="margin-top:10px"><button class="btn" id="chk2">Проверить таблицу и ответы</button></div>
+<div id="msg2" style="margin-top:6px;min-height:20px"></div></section>
 <section><h2>Вывод</h2><div class="q">В ходе эксперимента было установлено, что...</div><textarea data-a="Вывод" style="min-height:100px"></textarea>
 <h2 style="margin-top:12px">Итоговый вопрос</h2>
 <div class="q">Почему отсутствие непосредственного электрического соединения между кабелями не гарантирует отсутствие утечки информации?</div>
@@ -91,7 +108,8 @@ small{color:var(--mu)}ol{padding-left:20px;margin:4px 0}.q{margin:10px 0 4px;fon
 <script>
 const $=id=>document.getElementById(id),lg=Math.log10;
 const C={k2:{n:'КСПВГ',c:-48},u5:{n:'UTP',c:-58},s5:{n:'STP',c:-85}},F=[0.1,0.6,2],FN=['100 кГц','600 кГц','2 МГц'];
-let S={on:false,pk:null};
+let S={on:false,pk:null,cf:1000,sw:2000,ang:0,pwr:false,p31:false,rc3:false};
+const lin=d=>Math.pow(10,d/10);
 const P0=()=>10*lg(Math.pow(5/2/Math.SQRT2,2)/50*1000);
 const truth=(k,f)=>P0()+C[k].c+12*lg(f/0.1);
 $('qs').innerHTML=['Обнаруживается ли сигнал на кабеле, который не подключён непосредственно к генератору?','На какой частоте получен наибольший уровень наведённого сигнала?','Как изменялся уровень сигнала при изменении частоты?','Отличаются ли результаты для КСПВГ, UTP и STP?','Как повлияло экранирование кабеля на результат?'].map((q,i)=>`<div class="q">${q}</div><textarea data-a="Вопрос ${i+1}"></textarea>`).join('');
@@ -103,11 +121,12 @@ $('gon').onclick=()=>{S.on=!S.on;$('gon').textContent='Сигнал на каб�
 function draw(){
  const cv=$('sp'),d=devicePixelRatio||1,w=cv.clientWidth,h=280;cv.width=w*d;cv.height=h*d;
  const g=cv.getContext('2d');g.scale(d,d);g.fillStyle='#07110e';g.fillRect(0,0,w,h);
- const c=+$('cf').value/1000,sp=+$('sw').value/1000,f0=+$('gf').value,k=$('cb').value;
- const sig=S.on?truth(k,f0):null,rbw=sp/50;
+ if(!S.pwr){g.fillStyle='#4a5d55';g.font='14px sans-serif';g.fillText('Анализатор выключен. Нажмите «Питание».',14,28);$('ro').innerHTML='<span>Нет питания</span>';return}
+ const c=S.cf/1000,sp=S.sw/1000,f0=+$('gf').value,k=$('cb').value;
+ const sig=S.on&&k!=='pw'?truth(k,f0):null,rbw=sp/50;
  g.strokeStyle='#1b3a30';g.fillStyle='#7c9';g.font='11px Consolas,monospace';
  for(let i=0;i<=10;i++){g.beginPath();g.moveTo(0,i*h/10);g.lineTo(w,i*h/10);g.stroke();g.beginPath();g.moveTo(i*w/10,0);g.lineTo(i*w/10,h);g.stroke();if(i<10)g.fillText(20-i*13,3,i*h/10+11)}
- const t=[];for(let i=0;i<w;i++){const fx=c-sp/2+sp*i/w;let l=Math.pow(10,-9.8);
+ const t=[];for(let i=0;i<w;i++){const fx=c-sp/2+sp*i/w;let l=Math.pow(10,-9.8)+nz(k,fx);
   if(sig!==null)l+=Math.pow(10,sig/10)*Math.exp(-2.3*Math.pow((fx-f0)/rbw,2));
   t.push(10*lg(l)+(Math.random()-.5)*2.5)}
  g.strokeStyle='#ffe14d';g.beginPath();t.forEach((v,i)=>{const y=(20-v)/130*h;i?g.lineTo(i,y):g.moveTo(i,y)});g.stroke();
@@ -115,15 +134,45 @@ function draw(){
  if($('pk').classList.contains('on')){g.fillStyle='#ff5252';const y=(20-pl)/130*h;g.beginPath();g.moveTo(m,y-2);g.lineTo(m-5,y-12);g.lineTo(m+5,y-12);g.fill()}
  g.fillStyle='#7c9';g.fillText('Ref 20 дБм, 13 дБ/дел',w-150,h-4);
  S.pk={f:pf,l:pl,hit:sig!==null&&Math.abs(pf-f0)<sp/10};
- $('ro').innerHTML=`<span>Frequency: ${pf<1?(pf*1000).toFixed(1)+' кГц':pf.toFixed(3)+' МГц'}</span><span>Level: ${pl.toFixed(1)} dBm</span>`}
+ const sd=[...t].sort((a,b)=>a-b),nm=sd[Math.floor(sd.length*.4)];
+ $('ro').innerHTML=`<span>Noise: ${nm.toFixed(1)} dBm</span><span>Frequency: ${pf<1?(pf*1000).toFixed(1)+' кГц':pf.toFixed(3)+' МГц'}</span><span>Level: ${pl.toFixed(1)} dBm</span>`}
 $('pk').onclick=()=>$('pk').classList.toggle('on');
 $('chk').onclick=()=>{let ok=0,n=0;document.querySelectorAll('#tb input').forEach(e=>{e.classList.remove('ok','no');if(!e.value)return;n++;
  const t=truth(e.dataset.k,F[e.dataset.j]),v=num(e.value);const good=Math.abs(v-t)<=3;e.classList.add(good?'ok':'no');if(good)ok++});
  $('msg').textContent=n?`Верно ${ok} из ${n} введённых. Красные ячейки перемерьте.`:'Таблица пуста.'};
+const nz=(k,f)=>S.p31?lin(-30+3.5*+$('p31l').value+C[k].c+12*lg(f/0.1)):0;
+const T2=['Шум, Соната выкл','Шум, мощность 5','Шум, мощность 10','Level сигнала, мощность 10'];
+const mk=(id,g,rows,cols)=>$(id).innerHTML='<tr><th></th>'+cols.map(x=>`<th>${x}</th>`).join('')+'</tr>'+rows.map(r=>`<tr><th>${r}</th>`+cols.map(c=>`<td><input data-t="${g}|${r}|${c}" inputmode="decimal" placeholder="дБм"></td>`).join('')+'</tr>').join('');
+$('t2').innerHTML='<tr><th></th>'+T2.map(x=>`<th>${x}</th>`).join('')+'</tr>'+Object.keys(C).map(k=>`<tr><th>${C[k].n}</th>`+T2.map((x,c)=>`<td><input data-t="Защита кабелей|${C[k].n}|${x}" data-k2="${k}" data-c="${c}" inputmode="decimal" placeholder="дБм"></td>`).join('')+'</tr>').join('');
+const QS=[['Как менялся уровень шума при увеличении мощности Сонаты-Р3.1?',['Не менялся','Уменьшался','Увеличивался: чем выше мощность, тем выше шумовой фон*']],
+['Соната заглушила информативный сигнал?',['Заглушила: сигнала на анализаторе не видно','Не заглушила: сигнал остался выше шума*']],
+['Почему так получилось? Потому что...',['Соната не создаёт шум в кабелях','уровень шума в кабеле остался ниже уровня сигнала: сигнал 5 В сильнее*','пробник не измеряет шум']],
+['На каком кабеле шум Сонаты наведён сильнее всего?',['UTP','STP','КСПВГ*']],
+['Как Соната защищает кабели, если излучает только в эфир?',['она отключает кабель от генератора','шум из эфира наводится на те же кабели, что и сигнал, и маскирует его*','шум подаётся напрямую в генератор']]];
+$('qs2').innerHTML=QS.map(q=>`<div class="q">${q[0]}</div><select data-ans="1" data-a="${q[0]}"><option value="">Выберите ответ</option>${q[1].map(a=>`<option value="${a.endsWith('*')?1:0}">${a.replace('*','')}</option>`).join('')}</select>`).join('');
+const en=(k,p)=>10*lg(Math.pow(10,-9.8)+(p?lin(-30+3.5*p+C[k].c+12*lg(20)):0));
+$('chk2').onclick=()=>{let ok=0,n=0;document.querySelectorAll('#t2 input').forEach(e=>{e.classList.remove('ok','no');if(!e.value)return;n++;const k=e.dataset.k2,c=+e.dataset.c,t=c===3?truth(k,2):en(k,[0,5,10][c]),g=Math.abs(num(e.value)-t)<=(c===3?3:4);e.classList.add(g?'ok':'no');if(g)ok++});
+ document.querySelectorAll('select[data-ans]').forEach(e=>{e.classList.remove('ok','no');if(!e.value)return;n++;const g=e.value==='1';e.classList.add(g?'ok':'no');if(g)ok++});
+ $('msg2').textContent=n?`Верно ${ok} из ${n}. Красные поля исправьте.`:'Ничего не заполнено.'};
+['p31'].forEach(n=>{$(n).onclick=()=>{S[n]=!S[n];$(n).textContent=S[n]?'Вкл':'Выкл';$(n).classList.toggle('on',S[n])};$(n+'l').oninput=e=>$(n+'v').textContent=e.target.value});
+const K={p:'cf',st:100},fm=v=>v>=1000?(v/1000)+' МГц':v+' кГц',kn=$('knob');
+const upd=()=>{$('vcf').textContent='Центр: '+fm(S.cf);$('vsw').textContent='SPAN: '+fm(S.sw);kn.style.transform=`rotate(${S.ang}deg)`;kn.setAttribute('aria-valuetext',fm(S[K.p]))};
+const turn=n=>{if(!S.pwr)return;S[K.p]=Math.max(10,Math.min(5000,S[K.p]+n*K.st));S.ang+=n*15;upd()};
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{K.p=b.dataset.p;document.querySelectorAll('[data-p]').forEach(x=>x.classList.toggle('on',x===b));upd()});
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{K.st=+b.dataset.s;document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b))});
+let drag=0,ga=0,acc=0,cx=0,cy=0;
+kn.onpointerdown=e=>{kn.setPointerCapture(e.pointerId);const r=kn.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;ga=Math.atan2(e.clientY-cy,e.clientX-cx);acc=0;drag=1;kn.style.cursor='grabbing'};
+kn.onpointermove=e=>{if(!drag)return;const a=Math.atan2(e.clientY-cy,e.clientX-cx);let d=a-ga;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;ga=a;acc+=d*180/Math.PI;while(acc>=15){turn(1);acc-=15}while(acc<=-15){turn(-1);acc+=15}};
+kn.onpointerup=kn.onpointercancel=()=>{drag=0;kn.style.cursor='grab'};
+kn.onwheel=e=>{e.preventDefault();turn(e.deltaY<0?1:-1)};
+kn.onkeydown=e=>{const u=['ArrowUp','ArrowRight'].includes(e.key),d=['ArrowDown','ArrowLeft'].includes(e.key);if(u||d){e.preventDefault();turn(u?1:-1)}};
+upd();
 $('cp').onclick=()=>{let t='РАБОЧИЙ ЛИСТ. Исследование утечки информации по электрическому каналу\n\nГипотеза: '+(document.querySelector('input[name=h]:checked')||{value:'—'}).value+'\n';
  document.querySelectorAll('textarea').forEach(e=>{t+=`\n${e.dataset.a}: ${e.value}`});
  t+='\n\nТаблица, дБм\nКабель\t'+FN.join('\t')+'\n'+Object.keys(C).map(k=>C[k].n+'\t'+F.map((f,j)=>inp(k,j).value||'—').join('\t')).join('\n');
+ t+='\n\nСоната, дБм';document.querySelectorAll('input[data-t]').forEach(e=>{t+=`\n${e.dataset.t.split('|').join(' / ')}: ${e.value||'—'}`});
+ document.querySelectorAll('select[data-ans]').forEach(e=>{t+=`\n${e.dataset.a} ${e.selectedIndex>0?e.options[e.selectedIndex].text:'—'}`});
  const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{navigator.clipboard.writeText(t)}catch(e){try{document.execCommand('copy')}catch(_){}}a.remove();$('cp').textContent='Скопировано'};
-$('cf').value=100;$('sw').value=50;
+$('pwr').onclick=()=>{S.pwr=!S.pwr;$('pwr').textContent='Питание: '+(S.pwr?'вкл':'выкл');$('pwr').classList.toggle('on',S.pwr)};
 setInterval(draw,300);addEventListener('resize',draw);
 </script></body></html>
